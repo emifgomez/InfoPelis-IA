@@ -40,7 +40,8 @@ export default function Index() {
     } else if (selectedGenre) {
       url = `https://api.themoviedb.org/3/discover/${type}?api_key=${API_KEY}&language=es-ES&with_genres=${selectedGenre}&page=${page}&sort_by=popularity.desc`;
     } else {
-      url = `https://api.themoviedb.org/3/${type}/popular?api_key=${API_KEY}&language=es-ES&page=${page}`;
+      const endpoint = type === "movie" ? "movie" : "tv";
+      url = `https://api.themoviedb.org/3/${endpoint}/popular?api_key=${API_KEY}&language=es-ES&page=${page}`;
     }
 
     fetch(url)
