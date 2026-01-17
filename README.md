@@ -1,16 +1,26 @@
-# React + Vite
+# 🎬 Movie Explorer AI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Una plataforma interactiva para amantes del cine donde puedes gestionar tus favoritos, dejar reseñas y conversar con una inteligencia artificial experta en cada obra.
 
-Currently, two official plugins are available:
+## 🚀 Características Principales
+- **Integración con Mistral AI:** Chat contextual que conoce los detalles de la película que estás viendo.
+- **Base de Datos con Supabase:** Autenticación de usuarios, almacenamiento de favoritos y reseñas en tiempo real.
+- **TMDB API:** Consumo de datos actualizados sobre trailers, reparto y sinopsis.
+- **Arquitectura Modular:** Componentes refactorizados para una alta mantenibilidad (`ChatIA`, `Reviews`, `Show`).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🛠️ Tecnologías utilizadas
+- [React](https://reactjs.org/) + [Vite](https://vitejs.dev/)
+- [Supabase](https://supabase.com/) (Base de datos y Auth)
+- [Mistral AI API](https://mistral.ai/)
+- [React Router Dom](https://reactrouter.com/)
+- [CSS3](https://developer.mozilla.org/es/docs/Web/CSS) (Diseño responsivo y Dark Mode)
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🔧 Instalación
+1. Clona el repositorio: `git clone https://github.com/TU_USUARIO/TU_REPO.git`
+2. Instala las dependencias: `npm install`
+3. Crea un archivo `.env` con tus credenciales:
+   ```env
+   VITE_TMDB_KEY=tu_llave
+   VITE_MISTRAL_KEY=tu_llave
+   VITE_SUPABASE_URL=tu_url
+   VITE_SUPABASE_ANON_KEY=tu_llave
