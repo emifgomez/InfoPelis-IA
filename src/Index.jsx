@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import Search from "./Search";
 import Sidebar from "./components/Sidebar";
 import RightSidebar from "./components/RightSidebar";
-import "./Index.css";
+import "./index.css";
 
 export default function Index() {
   const [movies, setMovies] = useState([]);
