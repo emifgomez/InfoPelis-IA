@@ -167,6 +167,7 @@ const containerStyle = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
+  boxSizing: "border-box"
 };
 
 const logoStyle = {

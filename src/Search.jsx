@@ -13,14 +13,20 @@ export default function Search({ query, setQuery, type, setType }) {
 
   const searchContainerStyle = {
     marginBottom: isMobile ? '20px' : '30px',
-    textAlign: 'center'
+    textAlign: 'center',
+    width: '100%',
+    maxWidth: '100vw',
+    overflow: 'hidden',
+    padding: isMobile ? '0 5px' : '0'
   };
 
   const buttonContainerStyle = {
     marginBottom: '15px',
     display: 'flex',
     justifyContent: 'center',
-    gap: isMobile ? '8px' : '10px'
+    gap: isMobile ? '8px' : '10px',
+    width: '100%',
+    maxWidth: '100%'
   };
 
   const buttonStyle = {
