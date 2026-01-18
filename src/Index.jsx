@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Search from "./Search";
 import Sidebar from "./components/Sidebar";
 import RightSidebar from "./components/RightSidebar";
+import IntroSection from "./components/IntroSection";
 import { useGenreContext } from "./App";
 import "./index.css";
 
@@ -155,6 +156,8 @@ return (
       >
         🎬 AI Movie & TV Explorer
       </h1>
+
+      <IntroSection />
 
       <Search
         query={query}
