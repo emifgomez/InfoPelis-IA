@@ -35,8 +35,9 @@ export default function Search({ query, setQuery, type, setType }) {
   };
 
   const inputStyle = {
-    width: isMobile ? '95%' : '80%',
-    padding: isMobile ? '10px 15px' : '12px 20px',
+    width: isMobile ? '100%' : '80%',
+    maxWidth: isMobile ? '100%' : '600px',
+    padding: isMobile ? '12px 20px' : '12px 20px',
     fontSize: isMobile ? '1rem' : '1.1rem',
     borderRadius: '25px',
     border: '2px solid #e0e0e0',
@@ -44,7 +45,8 @@ export default function Search({ query, setQuery, type, setType }) {
     boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
     backgroundColor: '#2a2a2a',
     color: 'white',
-    borderColor: '#444'
+    borderColor: '#444',
+    boxSizing: 'border-box'
   };
 
   return (

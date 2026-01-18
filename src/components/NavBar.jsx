@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
-export default function Navbar({ toggleSidebars }) {
+export default function Navbar({ toggleSidebars, isMobileSidebarOpen, setIsMobileSidebarOpen }) {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [email, setEmail] = useState("");
@@ -61,7 +61,7 @@ export default function Navbar({ toggleSidebars }) {
         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
           <button
             className="hamburger-menu"
-            onClick={toggleSidebars}
+            onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
             style={hamburgerStyle}
           >
             ☰

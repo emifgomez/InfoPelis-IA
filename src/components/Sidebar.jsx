@@ -12,7 +12,7 @@ const GENRES = [
   { id: 878, name: "Ciencia Ficción" },
 ];
 
-export default function Sidebar({ onSelectGenre }) {
+export default function Sidebar({ onSelectGenre, isMobileSidebarOpen, setIsMobileSidebarOpen }) {
   const navigate = useNavigate();
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
@@ -25,46 +25,91 @@ export default function Sidebar({ onSelectGenre }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  if (isMobile) return null;
+  if (isMobile && !isMobileSidebarOpen) return null;
 
   const handleGenreClick = (genreId) => {
     onSelectGenre(genreId);
     navigate("/");
+    if (isMobile) {
+      setIsMobileSidebarOpen(false);
+    }
   };
 
+  const sidebarStyleMobile = isMobile ? {
+    ...sidebarStyle,
+    width: "280px",
+    transform: isMobileSidebarOpen ? "translateX(0)" : "translateX(-100%)",
+    transition: "transform 0.3s ease",
+    zIndex: 3000,
+    boxShadow: "2px 0 10px rgba(0,0,0,0.5)"
+  } : sidebarStyle;
+
   return (
-    <div style={sidebarStyle}>
-      <h3 style={titleStyle}>Explorar</h3>
+    <>
+      {isMobile && isMobileSidebarOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            zIndex: 2999,
+            onClick: () => setIsMobileSidebarOpen(false)
+          }}
+        />
+      )}
+      <div style={sidebarStyleMobile}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px" }}>
+          <h3 style={titleStyle}>Explorar</h3>
+          {isMobile && (
+            <button
+              onClick={() => setIsMobileSidebarOpen(false)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "white",
+                fontSize: "24px",
+                cursor: "pointer",
+                padding: "0"
+              }}
+            >
+              ×
+            </button>
+          )}
+        </div>
 
-      <div style={searchSection}>
-        <label style={labelStyle}>Buscar por género</label>
-        <select
-          onChange={(e) => handleGenreClick(e.target.value)}
-          style={selectStyle}
-        >
-          <option value="">Todos los géneros</option>
-          {GENRES.map((g) => (
-            <option key={g.id} value={g.id}>
-              {g.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <ul style={listStyle}>
-        {GENRES.map((g) => (
-          <li
-            key={g.id}
-            style={itemStyle}
-            onClick={() => handleGenreClick(g.id)}
-            onMouseOver={(e) => (e.target.style.color = "white")}
-            onMouseOut={(e) => (e.target.style.color = "#aaa")}
+        <div style={searchSection}>
+          <label style={labelStyle}>Buscar por género</label>
+          <select
+            onChange={(e) => handleGenreClick(e.target.value)}
+            style={selectStyle}
           >
-            {g.name}
-          </li>
-        ))}
-      </ul>
-    </div>
+            <option value="">Todos los géneros</option>
+            {GENRES.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <ul style={listStyle}>
+          {GENRES.map((g) => (
+            <li
+              key={g.id}
+              style={itemStyle}
+              onClick={() => handleGenreClick(g.id)}
+              onMouseOver={(e) => (e.target.style.color = "white")}
+              onMouseOut={(e) => (e.target.style.color = "#aaa")}
+            >
+              {g.name}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
   );
 }
 

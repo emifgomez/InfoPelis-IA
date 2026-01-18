@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Search from "./Search";
 import Sidebar from "./components/Sidebar";
 import RightSidebar from "./components/RightSidebar";
+import { useGenreContext } from "./App";
 import "./index.css";
 
 export default function Index() {
@@ -10,9 +11,10 @@ export default function Index() {
   const [query, setQuery] = useState("");
   const [type, setType] = useState("movie");
   const [page, setPage] = useState(1);
-  const [selectedGenre, setSelectedGenre] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const observerRef = useRef();
+  
+  const { selectedGenre, setSelectedGenre, genreQuery, setGenreQuery } = useGenreContext();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
@@ -25,6 +27,7 @@ export default function Index() {
   const handleLogoClick = () => {
     setQuery("");
     setSelectedGenre("");
+    setGenreQuery("");
     setType("movie");
     setPage(1);
   };
@@ -32,7 +35,7 @@ export default function Index() {
   useEffect(() => {
     setMovies([]);
     setPage(1);
-  }, [query, type, selectedGenre]);
+  }, [query, type, selectedGenre, genreQuery]);
 
   useEffect(() => {
     let url = "";
@@ -53,7 +56,7 @@ export default function Index() {
         );
       })
       .catch((err) => console.error("Error fetching data:", err));
-  }, [query, type, page, selectedGenre, API_KEY]);
+  }, [query, type, page, selectedGenre, genreQuery, API_KEY]);
 
 useEffect(() => {
     const observer = new IntersectionObserver(
@@ -136,7 +139,7 @@ useEffect(() => {
 
 return (
     <div className="index-container">
-      {!isMobile && (
+      {false && (
         <Sidebar
           onSelectGenre={(id) => {
             setQuery("");
@@ -158,6 +161,7 @@ return (
         setQuery={(val) => {
           setQuery(val);
           setSelectedGenre("");
+          setGenreQuery("");
         }}
         type={type}
         setType={setType}
