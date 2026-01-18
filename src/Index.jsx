@@ -11,6 +11,7 @@ export default function Index() {
   const [type, setType] = useState("movie");
   const [page, setPage] = useState(1);
   const [selectedGenre, setSelectedGenre] = useState("");
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const observerRef = useRef();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -54,7 +55,7 @@ export default function Index() {
       .catch((err) => console.error("Error fetching data:", err));
   }, [query, type, page, selectedGenre, API_KEY]);
 
-  useEffect(() => {
+useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -66,6 +67,14 @@ export default function Index() {
     if (observerRef.current) observer.observe(observerRef.current);
     return () => observer.disconnect();
   }, [movies]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const askGlobalAI = async () => {
     if (!prompt.trim()) return;
@@ -125,14 +134,16 @@ export default function Index() {
     }
   };
 
-  return (
+return (
     <div className="index-container">
-      <Sidebar
-        onSelectGenre={(id) => {
-          setQuery("");
-          setSelectedGenre(id);
-        }}
-      />
+      {!isMobile && (
+        <Sidebar
+          onSelectGenre={(id) => {
+            setQuery("");
+            setSelectedGenre(id);
+          }}
+        />
+      )}
 
       <h1
         className="index-title"
@@ -184,7 +195,7 @@ export default function Index() {
           <div ref={observerRef} className="scroll-sentinel" />
         </main>
 
-        <RightSidebar />
+        {!isMobile && <RightSidebar />}
       </div>
 
       <div className="floating-chat-container">
