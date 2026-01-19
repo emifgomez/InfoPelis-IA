@@ -5,7 +5,7 @@ export default function ChatIA({ data, cast }) {
   const [chatHistory, setChatHistory] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
 
-  const API_KEY_MISTRAL = import.meta.env.VITE_MISTRAL_KEY;
+  
 
   const askAI = async () => {
     if (!prompt.trim() || !data) return;
@@ -17,36 +17,21 @@ export default function ChatIA({ data, cast }) {
 
     const castNames = cast.map((a) => `${a.name} (${a.character})`).join(", ");
 
-    try {
-      const response = await fetch(
-        "https://api.mistral.ai/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${API_KEY_MISTRAL}`,
-          },
-          body: JSON.stringify({
-            model: "mistral-small-latest",
-            messages: [
-              {
-                role: "system",
-                content: `Eres un experto cinéfilo hablando sobre "${
-                  data.title || data.name
-                }". Datos: Reparto: ${castNames}. Sinopsis: ${
-                  data.overview
-                }. Reglas: Sé breve, entusiasta y no inventes datos.`,
-              },
-              { role: "user", content: currentPrompt },
-            ],
-            temperature: 0.8,
-          }),
-        }
-      );
+try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: currentPrompt,
+          movieData: data,
+          cast: cast,
+        }),
+      });
+
       const result = await response.json();
       setChatHistory((prev) => [
         ...prev,
-        { role: "ai", text: result.choices[0].message.content },
+        { role: "ai", text: result.response },
       ]);
     } catch (error) {
       console.error("Error IA:", error);

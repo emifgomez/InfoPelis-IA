@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { supabase } from "./supabaseClient";
 import ChatIA from "./ChatIA";
 import Reviews from "./Reviews";
 import "./Show.css";
@@ -15,17 +14,29 @@ export default function Show() {
   const [loadingFav, setLoadingFav] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
-  const API_KEY_TMDB = import.meta.env.VITE_TMDB_KEY;
+  
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setCurrentUser(user);
-    });
+useEffect(() => {
+    const fetchMovieData = async () => {
+      try {
+        const [authResponse, movieResponse] = await Promise.all([
+          fetch('/api/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'getUser' }),
+          }),
+          fetch('/api/movie', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type, id }),
+          }),
+        ]);
 
-    const url = `https://api.themoviedb.org/3/${type}/${id}?api_key=${API_KEY_TMDB}&language=es-ES&append_to_response=credits,videos`;
-    fetch(url)
-      .then((res) => res.json())
-      .then((res) => {
+        const authData = await authResponse.json();
+        setCurrentUser(authData.user);
+
+        const movieData = await movieResponse.json();
+        const res = movieData.data;
         setData(res);
         setCast(res.credits?.cast?.slice(0, 10) || []);
         const videoData = res.videos?.results?.find(
@@ -33,53 +44,79 @@ export default function Show() {
         );
         if (videoData) setTrailer(videoData.key);
         checkIfFavorite(res.id);
-      })
-      .catch((err) => console.error(err));
-  }, [id, type, API_KEY_TMDB]);
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-  const checkIfFavorite = async (movieId) => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data: fav } = await supabase
-      .from("favoritos")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("movie_id", movieId.toString())
-      .single();
-    if (fav) setIsFavorite(true);
+    fetchMovieData();
+  }, [id, type]);
+
+const checkIfFavorite = async (movieId) => {
+    try {
+      const authResponse = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getUser' }),
+      });
+      const authData = await authResponse.json();
+      const user = authData.user;
+      
+      if (!user) return;
+      
+      const favResponse = await fetch('/api/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'check',
+          movieId: movieId.toString(),
+          userId: user.id,
+        }),
+      });
+      
+      const favData = await favResponse.json();
+      if (favData.isFavorite) setIsFavorite(true);
+    } catch (error) {
+      console.error("Error checking favorite:", error);
+    }
   };
 
-  const toggleFavorite = async () => {
+const toggleFavorite = async () => {
     setLoadingFav(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      alert("Debes estar logueado para guardar favoritos");
+    try {
+      const authResponse = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getUser' }),
+      });
+      const authData = await authResponse.json();
+      const user = authData.user;
+      
+      if (!user) {
+        alert("Debes estar logueado para guardar favoritos");
+        setLoadingFav(false);
+        return;
+      }
+
+      const favResponse = await fetch('/api/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'toggle',
+          movieId: data.id.toString(),
+          movieTitle: data.title || data.name,
+          posterPath: data.poster_path,
+          userId: user.id,
+        }),
+      });
+
+      const favData = await favResponse.json();
+      setIsFavorite(favData.isFavorite);
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    } finally {
       setLoadingFav(false);
-      return;
     }
-    if (isFavorite) {
-      await supabase
-        .from("favoritos")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("movie_id", data.id.toString());
-      setIsFavorite(false);
-    } else {
-      await supabase.from("favoritos").insert([
-        {
-          user_id: user.id,
-          movie_id: data.id.toString(),
-          movie_title: data.title || data.name,
-          poster_path: data.poster_path,
-        },
-      ]);
-      setIsFavorite(true);
-    }
-    setLoadingFav(false);
   };
 
   if (!data)

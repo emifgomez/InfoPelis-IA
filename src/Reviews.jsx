@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { supabase } from "./supabaseClient";
 
 export default function Reviews({ id, data, currentUser }) {
   const [rating, setRating] = useState(0);
@@ -12,54 +11,90 @@ export default function Reviews({ id, data, currentUser }) {
     fetchReviews();
   }, [id]);
 
-  const fetchReviews = async () => {
-    const { data: reviewsData } = await supabase
-      .from("reviews")
-      .select("*")
-      .eq("movie_id", id)
-      .order("created_at", { ascending: false });
-    if (reviewsData) setAllReviews(reviewsData);
-  };
-
-  const submitReview = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return alert("Debes iniciar sesión para dejar una reseña");
-    if (rating === 0) return alert("Por favor, selecciona una puntuación");
-    if (!reviewText.trim()) return alert("El comentario no puede estar vacío");
-
-    setIsSubmitting(true);
-    const { error } = await supabase.from("reviews").insert([
-      {
-        movie_id: id,
-        user_id: user.id,
-        user_email: user.email,
-        rating,
-        content: reviewText,
-        movie_title: data.title || data.name,
-      },
-    ]);
-
-    if (!error) {
-      setReviewText("");
-      setRating(0);
-      fetchReviews();
+const fetchReviews = async () => {
+    try {
+      const response = await fetch('/api/movie-reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          movieId: id,
+          action: 'list',
+        }),
+      });
+      const data = await response.json();
+      if (data.reviews) setAllReviews(data.reviews);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
     }
-    setIsSubmitting(false);
   };
 
-  const deleteReview = async (reviewId) => {
+const submitReview = async () => {
+    try {
+      const authResponse = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getUser' }),
+      });
+      const authData = await authResponse.json();
+      const user = authData.user;
+      
+      if (!user) return alert("Debes iniciar sesión para dejar una reseña");
+      if (rating === 0) return alert("Por favor, selecciona una puntuación");
+      if (!reviewText.trim()) return alert("El comentario no puede estar vacío");
+
+      setIsSubmitting(true);
+      
+      const response = await fetch('/api/movie-reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          movieId: id,
+          action: 'create',
+          reviewData: {
+            user_id: user.id,
+            user_email: user.email,
+            rating,
+            content: reviewText,
+            movie_title: data.title || data.name,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        setReviewText("");
+        setRating(0);
+        fetchReviews();
+      }
+    } catch (error) {
+      console.error("Error submitting review:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+const deleteReview = async (reviewId) => {
     if (!window.confirm("¿Estás seguro de que quieres borrar tu reseña?"))
       return;
-    const { error } = await supabase
-      .from("reviews")
-      .delete()
-      .eq("id", reviewId);
-    if (error) {
+    
+    try {
+      const response = await fetch('/api/movie-reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          movieId: id,
+          action: 'delete',
+          reviewId,
+        }),
+      });
+
+      if (response.ok) {
+        setAllReviews((prev) => prev.filter((r) => r.id !== reviewId));
+      } else {
+        alert("No se pudo eliminar la reseña");
+      }
+    } catch (error) {
+      console.error("Error deleting review:", error);
       alert("No se pudo eliminar la reseña");
-    } else {
-      setAllReviews((prev) => prev.filter((r) => r.id !== reviewId));
     }
   };
 

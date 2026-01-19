@@ -22,8 +22,7 @@ export default function Index() {
   const [chatHistory, setChatHistory] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
 
-  const API_KEY = import.meta.env.VITE_TMDB_KEY;
-  const API_KEY_MISTRAL = import.meta.env.VITE_MISTRAL_KEY;
+
 
   const handleLogoClick = () => {
     setQuery("");
@@ -38,26 +37,30 @@ export default function Index() {
     setPage(1);
   }, [query, type, selectedGenre, genreQuery]);
 
-  useEffect(() => {
-    let url = "";
-    if (query) {
-      url = `https://api.themoviedb.org/3/search/${type}?api_key=${API_KEY}&language=es-ES&query=${query}&page=${page}`;
-    } else if (selectedGenre) {
-      url = `https://api.themoviedb.org/3/discover/${type}?api_key=${API_KEY}&language=es-ES&with_genres=${selectedGenre}&page=${page}&sort_by=popularity.desc`;
-    } else {
-      const endpoint = type === "movie" ? "movie" : "tv";
-      url = `https://api.themoviedb.org/3/${endpoint}/popular?api_key=${API_KEY}&language=es-ES&page=${page}`;
-    }
-
-    fetch(url)
-      .then((res) => res.json())
-      .then((data) => {
+useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        const response = await fetch('/api/browse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type,
+            page,
+            query: query || undefined,
+            genre: selectedGenre || undefined,
+          }),
+        });
+        const data = await response.json();
         setMovies((prev) =>
           page === 1 ? data.results || [] : [...prev, ...(data.results || [])]
         );
-      })
-      .catch((err) => console.error("Error fetching data:", err));
-  }, [query, type, page, selectedGenre, genreQuery, API_KEY]);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      }
+    };
+
+    fetchMovies();
+  }, [query, type, page, selectedGenre, genreQuery]);
 
 useEffect(() => {
     const observer = new IntersectionObserver(
@@ -80,7 +83,7 @@ useEffect(() => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const askGlobalAI = async () => {
+const askGlobalAI = async () => {
     if (!prompt.trim()) return;
     setIsTyping(true);
     const userMsg = { role: "user", text: prompt };
@@ -89,47 +92,19 @@ useEffect(() => {
     setChatHistory((prev) => [...prev, userMsg]);
 
     try {
-      const searchRes = await fetch(
-        `https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&language=es-ES&query=${currentPrompt}`
-      );
-      const searchData = await searchRes.json();
-      const contextInfo = searchData.results
-        ?.slice(0, 2)
-        .map((r) => `Obra: ${r.title || r.name}. Sinopsis: ${r.overview}.`)
-        .join(" | ");
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: currentPrompt,
+          context: chatHistory.map((m) => m.text).join(' | '),
+        }),
+      });
 
-      const response = await fetch(
-        "https://api.mistral.ai/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${API_KEY_MISTRAL}`,
-          },
-          body: JSON.stringify({
-            model: "mistral-small-latest",
-            messages: [
-              {
-                role: "system",
-                content: `Sos un cinéfilo experto hablando con un amigo. Contexto: ${
-                  contextInfo || "No hay info extra"
-                }. REGLAS: Responde informal, breve y no inventes.`,
-              },
-              ...chatHistory.map((m) => ({
-                role: m.role === "user" ? "user" : "assistant",
-                content: m.text,
-              })),
-              { role: "user", content: currentPrompt },
-            ],
-            temperature: 0.8,
-          }),
-        }
-      );
-
-      const dataMistral = await response.json();
+      const data = await response.json();
       setChatHistory((prev) => [
         ...prev,
-        { role: "ai", text: dataMistral.choices[0].message.content },
+        { role: "ai", text: data.response },
       ]);
     } catch (error) {
       console.error("Error en el chat:", error);

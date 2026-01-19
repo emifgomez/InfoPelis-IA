@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
 
 export default function Navbar({ toggleSidebars, isMobileSidebarOpen, setIsMobileSidebarOpen }) {
   const navigate = useNavigate();
@@ -15,36 +14,57 @@ export default function Navbar({ toggleSidebars, isMobileSidebarOpen, setIsMobil
     setPage(1);
   };
 
-  useEffect(() => {
+useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
+    const checkUser = async () => {
+      try {
+        const response = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'getUser' }),
+        });
+        const data = await response.json();
+        setUser(data.user);
+      } catch (error) {
+        console.error("Error checking user:", error);
+      }
+    };
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
+    checkUser();
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      subscription.unsubscribe();
     };
   }, []);
 
-  const handleAuth = async (type) => {
+const handleAuth = async (type) => {
     if (!email || !password) return alert("Completa los campos");
-    const { error } =
-      type === "login"
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password });
-    if (error) alert(error.message);
-    else {
-      setEmail("");
-      setPassword("");
+    
+    try {
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: type === "login" ? "signIn" : "signUp",
+          email,
+          password,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.error) {
+        alert(data.error);
+      } else {
+        setUser(data.user);
+        setEmail("");
+        setPassword("");
+      }
+    } catch (error) {
+      console.error("Auth error:", error);
+      alert("Error de conexión");
     }
   };
 
@@ -89,8 +109,19 @@ export default function Navbar({ toggleSidebars, isMobileSidebarOpen, setIsMobil
               <span className="user-email-nav" style={userDisplayStyle}>
                 {user.is_anonymous ? "👤 Invitado" : user.email.split("@")[0]}
               </span>
-              <button
-                onClick={() => supabase.auth.signOut()}
+<button
+                onClick={async () => {
+                  try {
+                    await fetch('/api/auth', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'signOut' }),
+                    });
+                    setUser(null);
+                  } catch (error) {
+                    console.error("Sign out error:", error);
+                  }
+                }}
                 style={logoutBtnStyle}
               >
                 Salir

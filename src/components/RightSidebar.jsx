@@ -1,49 +1,59 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../supabaseClient";
 
 export default function RightSidebar() {
   const [trending, setTrending] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [recentReviews, setRecentReviews] = useState([]);
-  const API_KEY = import.meta.env.VITE_TMDB_KEY;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(
-          `https://api.themoviedb.org/3/trending/all/week?api_key=${API_KEY}&language=es-ES`
-        );
-        const data = await res.json();
-        setTrending(data.results?.slice(0, 5) || []);
+        const [trendingResponse, authResponse, reviewsResponse] = await Promise.all([
+          fetch('/api/trending', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          }),
+          fetch('/api/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'getUser' }),
+          }),
+          fetch('/api/reviews', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ limit: 4 }),
+          }),
+        ]);
+
+        const trendingData = await trendingResponse.json();
+        setTrending(trendingData.results || []);
+
+        const authData = await authResponse.json();
+        const user = authData.user;
+        
+        if (user) {
+          const favResponse = await fetch('/api/favorites', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'list',
+              userId: user.id,
+            }),
+          });
+          const favData = await favResponse.json();
+          setFavorites(favData.favorites?.slice(0, 5) || []);
+        }
+
+        const reviewsData = await reviewsResponse.json();
+        setRecentReviews(reviewsData.reviews || []);
       } catch (err) {
-        console.error("Error TMDB:", err);
+        console.error("Error fetching data:", err);
       }
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        const { data: favs, error: favError } = await supabase
-          .from("favoritos")
-          .select("*")
-          .eq("user_id", user.id)
-          .limit(5);
-
-        if (!favError) setFavorites(favs || []);
-      }
-
-      const { data: revs, error: revError } = await supabase
-        .from("reviews")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(4);
-
-      if (!revError) setRecentReviews(revs || []);
     };
 
     fetchData();
-  }, [API_KEY]);
+  }, []);
 
   return (
     <aside className="right-sidebar">

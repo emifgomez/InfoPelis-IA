@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "./supabaseClient";
 
 export default function MyList() {
   const [favorites, setFavorites] = useState([]);
@@ -10,20 +9,33 @@ export default function MyList() {
     fetchFavorites();
   }, []);
 
-  const fetchFavorites = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      const { data, error } = await supabase
-        .from("favoritos")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) console.error("Error:", error);
-      else setFavorites(data || []);
+const fetchFavorites = async () => {
+    try {
+      const authResponse = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getUser' }),
+      });
+      const authData = await authResponse.json();
+      const user = authData.user;
+      
+      if (user) {
+        const favResponse = await fetch('/api/favorites', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'list',
+            userId: user.id,
+          }),
+        });
+        const favData = await favResponse.json();
+        setFavorites(favData.favorites || []);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   if (loading)

@@ -7,33 +7,30 @@ export default function ActorDetail() {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const API_KEY = import.meta.env.VITE_TMDB_KEY;
+  
 
-  useEffect(() => {
-    setLoading(true);
+useEffect(() => {
+    const fetchActorData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/actor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id }),
+        });
 
-    const fetchActor = fetch(
-      `https://api.themoviedb.org/3/person/${id}?api_key=${API_KEY}&language=es-ES`
-    ).then((res) => res.json());
-
-    const fetchMovies = fetch(
-      `https://api.themoviedb.org/3/person/${id}/movie_credits?api_key=${API_KEY}&language=es-ES`
-    ).then((res) => res.json());
-
-    Promise.all([fetchActor, fetchMovies])
-      .then(([actorData, movieData]) => {
-        setActor(actorData);
-        const topMovies = movieData.cast
-          .sort((a, b) => b.popularity - a.popularity)
-          .slice(0, 18);
-        setMovies(topMovies);
+        const data = await response.json();
+        setActor(data.actor);
+        setMovies(data.movies);
         setLoading(false);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Error cargando datos del actor:", err);
         setLoading(false);
-      });
-  }, [id, API_KEY]);
+      }
+    };
+
+    fetchActorData();
+  }, [id]);
 
   if (loading)
     return (
