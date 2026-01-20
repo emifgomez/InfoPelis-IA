@@ -82,7 +82,7 @@ export default function IntroSection() {
       </p>
 
       <div style={ctaStyle}>
-        <span style={highlightStyle}>💡 Tip Pro:</span> Haz clic en el botón 🤖 de la esquina inferior derecha 
+        <span style={highlightStyle}>💡 Tip:</span> Haz clic en el botón 🤖 de la esquina inferior derecha 
         y pregunta sobre cualquier película o serie mientras navegas.
       </div>
     </div>
