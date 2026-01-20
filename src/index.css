@@ -130,11 +130,11 @@ button:focus-visible {
 
   .movies-grid {
     display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
+    grid-template-columns: calc(50vw - 15px) calc(50vw - 15px) !important;
+    gap: 10px !important;
     margin: 10px 10px !important;
-    width: calc(100% - 20px) !important;
-    max-width: 100% !important;
+    width: auto !important;
+    max-width: none !important;
     padding: 0 !important;
   }
   
@@ -175,6 +175,7 @@ button:focus-visible {
     background-color: #222 !important;
     border-radius: 6px !important;
     border: 1px solid #333 !important;
+    max-width: calc(50vw - 15px) !important;
   }
   
   .movie-card img {
