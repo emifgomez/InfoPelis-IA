@@ -44,8 +44,8 @@ export default function IntroSection() {
   const ctaStyle = {
     fontSize: isMobile ? '0.8rem' : '0.95rem',
     color: '#ffffff',
-    backgroundColor: 'rgba(229, 9, 20, 0.2)',
-    border: '2px solid #e50914',
+    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+    border: '2px solid #4CAF50',
     borderRadius: '12px',
     padding: isMobile ? '12px 15px' : '15px 25px',
     fontWeight: '600',
@@ -55,7 +55,7 @@ export default function IntroSection() {
   };
 
   const highlightStyle = {
-    color: '#ff9800',
+    color: '#e50914',
     fontWeight: '700'
   };
 
