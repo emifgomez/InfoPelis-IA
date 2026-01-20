@@ -55,7 +55,7 @@ export default function IntroSection() {
   };
 
   const highlightStyle = {
-    color: '#e50914',
+    color: '#ff9800',
     fontWeight: '700'
   };
 
