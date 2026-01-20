@@ -142,6 +142,13 @@ button:focus-visible {
     padding: 0 !important;
   }
   
+  .movie-card-link {
+    width: 100% !important;
+    display: block !important;
+    text-decoration: none !important;
+    color: inherit !important;
+  }
+  
   .movie-card {
     padding: 2px !important;
     display: flex !important;
