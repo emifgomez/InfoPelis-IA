@@ -135,9 +135,9 @@ button:focus-visible {
   .movies-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin: 10px 10px;
-    width: calc(100% - 20px);
+    gap: 5px;
+    margin: 10px 15px;
+    width: calc(100% - 30px);
   }
   
   .movie-card {
@@ -153,8 +153,7 @@ button:focus-visible {
   
   .movie-card img {
     width: 100%;
-    height: auto;
-    aspect-ratio: 2/3;
+    height: 160px;
     object-fit: cover;
     border-radius: 3px;
   }
