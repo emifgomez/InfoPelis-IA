@@ -26,6 +26,7 @@ Una plataforma interactiva para amantes del cine donde puedes gestionar tus favo
    SUPABASE_SERVICE_ROLE_KEY=tu_llave
 
 Retos Técnicos y Soluciones
+
 Gestión de Estado Asincrónico: Implementación de flujos de datos complejos integrando Mistral AI y TMDB, asegurando una experiencia de usuario fluida mediante estados de carga y manejo de errores.
 
 Persistencia y Seguridad: Configuración de Supabase Auth y manejo de bases de datos relacionales para la gestión de perfiles de usuario, reseñas y listas de favoritos.
