@@ -15,6 +15,8 @@ Una plataforma interactiva para amantes del cine donde puedes gestionar tus favo
 - [React Router Dom](https://reactrouter.com/)
 - [CSS3](https://developer.mozilla.org/es/docs/Web/CSS) (Diseño responsivo y Dark Mode)
 
+- Implementé un backend Serverless mediante Vercel Functions, permitiendo una comunicación segura con la API de Mistral AI y protegiendo las credenciales del lado del servidor.
+
 ## 🔧 Instalación
 1. Clona el repositorio: `git clone https://github.com/TU_USUARIO/TU_REPO.git`
 2. Instala las dependencias: `npm install`
