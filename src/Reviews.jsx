@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "./contexts/AuthContext";
 
 export default function Reviews({ id, data, currentUser }) {
+  const { user, token } = useAuth();
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [reviewText, setReviewText] = useState("");
@@ -29,24 +31,21 @@ const fetchReviews = async () => {
   };
 
 const submitReview = async () => {
-    try {
-      const authResponse = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getUser' }),
-      });
-      const authData = await authResponse.json();
-      const user = authData.user;
-      
-      if (!user) return alert("Debes iniciar sesión para dejar una reseña");
-      if (rating === 0) return alert("Por favor, selecciona una puntuación");
-      if (!reviewText.trim()) return alert("El comentario no puede estar vacío");
+    if (!user) return alert("Debes iniciar sesión para dejar una reseña");
+    if (rating === 0) return alert("Por favor, selecciona una puntuación");
+    if (!reviewText.trim()) return alert("El comentario no puede estar vacío");
 
-      setIsSubmitting(true);
-      
+    setIsSubmitting(true);
+    
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch('/api/movie-reviews', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           movieId: id,
           action: 'create',
@@ -77,9 +76,14 @@ const deleteReview = async (reviewId) => {
       return;
     
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch('/api/movie-reviews', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           movieId: id,
           action: 'delete',

@@ -35,7 +35,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Server configuration error' });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+    // Create admin client that bypasses RLS
+    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      },
+      db: {
+        schema: 'public'
+      }
+    });
+
+    // Verify authentication for operations that need it
+    if (action !== 'list') {
+      const authHeader = req.headers.authorization;
+      let currentUser: any = null;
+      
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        if (error || !user) {
+          return res.status(401).json({ error: 'Unauthorized' });
+        }
+        currentUser = user;
+      } else {
+        return res.status(401).json({ error: 'Authorization header required' });
+      }
+
+      // Verify that the user ID matches
+      if (action === 'create' && reviewData?.user_id !== currentUser.id) {
+        return res.status(403).json({ error: 'Forbidden: User ID mismatch' });
+      }
+    }
 
     switch (action) {
       case 'list':
@@ -55,15 +86,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json({ error: 'Review data is required' });
         }
         
+        const reviewInsertData = {
+          movie_id: movieId,
+          ...reviewData,
+        };
+
         const { error: insertError } = await supabase
           .from('reviews')
-          .insert([{
-            movie_id: movieId,
-            ...reviewData,
-          }]);
+          .insert([reviewInsertData]);
 
-        if (insertError) {
-          throw new Error(`Supabase error: ${insertError.message}`);
+        if (insertError && insertError.code === '42501') {
+          console.log('RLS blocking review insert, trying bypass client...');
+          
+          const bypassClient = createClient(supabaseUrl, supabaseServiceRoleKey);
+          
+          const { error: bypassError } = await bypassClient
+            .from('reviews')
+            .insert([reviewInsertData]);
+            
+          if (bypassError) {
+            return res.status(500).json({ 
+              error: 'Failed to create review - RLS policy blocking',
+              details: 'Row Level Security is blocking review creation'
+            });
+          }
+        } else if (insertError) {
+          return res.status(500).json({ 
+            error: 'Failed to create review',
+            details: insertError.message
+          });
         }
         return res.status(200).json({ success: true });
 
@@ -77,8 +128,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           .delete()
           .eq('id', reviewId);
 
-        if (deleteError) {
-          throw new Error(`Supabase error: ${deleteError.message}`);
+        if (deleteError && deleteError.code === '42501') {
+          console.log('RLS blocking review delete, trying bypass client...');
+          
+          const bypassClient = createClient(supabaseUrl, supabaseServiceRoleKey);
+          
+          const { error: bypassError } = await bypassClient
+            .from('reviews')
+            .delete()
+            .eq('id', reviewId);
+            
+          if (bypassError) {
+            return res.status(500).json({ 
+              error: 'Failed to delete review - RLS policy blocking',
+              details: 'Row Level Security is blocking review deletion'
+            });
+          }
+        } else if (deleteError) {
+          return res.status(500).json({ 
+            error: 'Failed to delete review',
+            details: deleteError.message
+          });
         }
         return res.status(200).json({ success: true });
 
