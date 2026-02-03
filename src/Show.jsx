@@ -52,18 +52,28 @@ const checkIfFavorite = async (movieId) => {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
+      const requestBody = {
+        action: 'check',
+        movieId: movieId.toString(),
+        userId: user.id,
+      };
+      
+      console.log('Checking favorite:', requestBody);
+      
       const favResponse = await fetch('/api/favorites', {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          action: 'check',
-          movieId: movieId.toString(),
-          userId: user.id,
-        }),
+        body: JSON.stringify(requestBody),
       });
       
       const favData = await favResponse.json();
-      if (favData.isFavorite) setIsFavorite(true);
+      console.log('Check favorite response:', favData);
+      
+      if (favData.error) {
+        console.error('Error checking favorite:', favData.error);
+      } else if (favData.isFavorite) {
+        setIsFavorite(true);
+      }
     } catch (error) {
       console.error("Error checking favorite:", error);
     }
@@ -82,22 +92,33 @@ const toggleFavorite = async () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      const requestBody = {
+        action: 'toggle',
+        movieId: data.id.toString(),
+        movieTitle: data.title || data.name,
+        posterPath: data.poster_path,
+        userId: user.id,
+      };
+      
+      console.log('Sending favorite request:', requestBody);
+
       const favResponse = await fetch('/api/favorites', {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          action: 'toggle',
-          movieId: data.id.toString(),
-          movieTitle: data.title || data.name,
-          posterPath: data.poster_path,
-          userId: user.id,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const favData = await favResponse.json();
-      setIsFavorite(favData.isFavorite);
+      console.log('Favorite response:', favData);
+      
+      if (favData.error) {
+        alert(`Error: ${favData.error}`);
+      } else {
+        setIsFavorite(favData.isFavorite);
+      }
     } catch (error) {
       console.error("Error toggling favorite:", error);
+      alert("Error de conexión al guardar favorito");
     } finally {
       setLoadingFav(false);
     }

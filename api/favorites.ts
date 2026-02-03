@@ -70,22 +70,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json({ error: 'Movie ID, User ID, and Movie Title are required' });
         }
         
-        const { data: existingFav } = await supabase
+        const { data: existingFav, error: fetchError } = await supabase
           .from('favoritos')
           .select('*')
           .eq('user_id', userId)
           .eq('movie_id', movieId)
           .single();
 
+        if (fetchError && fetchError.code !== 'PGRST116') {
+          console.error('Error checking existing favorite:', fetchError);
+          return res.status(500).json({ error: 'Database error' });
+        }
+
         if (existingFav) {
-          await supabase
+          const { error: deleteError } = await supabase
             .from('favoritos')
             .delete()
             .eq('user_id', userId)
             .eq('movie_id', movieId);
+          
+          if (deleteError) {
+            console.error('Error deleting favorite:', deleteError);
+            return res.status(500).json({ error: 'Failed to remove favorite' });
+          }
+          
           return res.status(200).json({ isFavorite: false });
         } else {
-          await supabase
+          const { error: insertError } = await supabase
             .from('favoritos')
             .insert([{
               user_id: userId,
@@ -93,6 +104,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               movie_title: movieTitle,
               poster_path: posterPath,
             }]);
+          
+          if (insertError) {
+            console.error('Error inserting favorite:', insertError);
+            return res.status(500).json({ error: 'Failed to add favorite' });
+          }
+          
           return res.status(200).json({ isFavorite: true });
         }
 
