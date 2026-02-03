@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function RightSidebar() {
+  const { user, token } = useAuth();
   const [trending, setTrending] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [recentReviews, setRecentReviews] = useState([]);
@@ -9,15 +11,15 @@ export default function RightSidebar() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [trendingResponse, authResponse, reviewsResponse] = await Promise.all([
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const [trendingResponse, reviewsResponse] = await Promise.all([
           fetch('/api/trending', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-          }),
-          fetch('/api/auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'getUser' }),
           }),
           fetch('/api/reviews', {
             method: 'POST',
@@ -29,13 +31,10 @@ export default function RightSidebar() {
         const trendingData = await trendingResponse.json();
         setTrending(trendingData.results || []);
 
-        const authData = await authResponse.json();
-        const user = authData.user;
-        
         if (user) {
           const favResponse = await fetch('/api/favorites', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({
               action: 'list',
               userId: user.id,
@@ -53,7 +52,7 @@ export default function RightSidebar() {
     };
 
     fetchData();
-  }, []);
+  }, [user, token]);
 
   return (
     <aside className="right-sidebar">
