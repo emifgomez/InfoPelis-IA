@@ -30,10 +30,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Server configuration error' });
     }
 
+    // Create admin client that bypasses RLS
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
+      },
+      db: {
+        schema: 'public'
       }
     });
 
@@ -113,9 +117,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           
           console.log('Inserting favorite:', insertData);
           
+          // Try direct insert first, then fall back to alternative if RLS blocks it
           const { error: insertError } = await supabase
             .from('favoritos')
             .insert([insertData]);
+
+          if (insertError && insertError.code === '42501') {
+            console.log('RLS blocking insert, trying with bypass client...');
+            
+            // Create a bypass client using different approach
+            const bypassClient = createClient(supabaseUrl, supabaseServiceRoleKey);
+            
+            const { error: bypassError } = await bypassClient
+              .from('favoritos')
+              .insert([insertData]);
+              
+            if (bypassError) {
+              console.error('Bypass client error:', bypassError);
+              return res.status(500).json({ 
+                error: 'Failed to add favorite - RLS policy blocking',
+                details: `Row Level Security is blocking the operation. Please check Supabase policies.`,
+                code: 'RLS_BLOCKED'
+              });
+            }
+          } else if (insertError) {
+            console.error('Insert error:', insertError);
+            return res.status(500).json({ 
+              error: 'Failed to add favorite',
+              details: insertError.message,
+              code: insertError.code
+            });
+          }
           
           if (insertError) {
             console.error('Error inserting favorite:', insertError);
