@@ -30,7 +30,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Server configuration error' });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
 
     // Verify authentication
     const authHeader = req.headers.authorization;
@@ -51,6 +56,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (userId !== currentUser.id) {
       return res.status(403).json({ error: 'Forbidden: User ID mismatch' });
     }
+
+    // Test table access
+    console.log('Testing table access for user:', currentUser.id);
 
     switch (action) {
       case 'check':
@@ -96,18 +104,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           
           return res.status(200).json({ isFavorite: false });
         } else {
+          const insertData = {
+            user_id: userId,
+            movie_id: movieId,
+            movie_title: movieTitle,
+            poster_path: posterPath,
+          };
+          
+          console.log('Inserting favorite:', insertData);
+          
           const { error: insertError } = await supabase
             .from('favoritos')
-            .insert([{
-              user_id: userId,
-              movie_id: movieId,
-              movie_title: movieTitle,
-              poster_path: posterPath,
-            }]);
+            .insert([insertData]);
           
           if (insertError) {
             console.error('Error inserting favorite:', insertError);
-            return res.status(500).json({ error: 'Failed to add favorite' });
+            console.error('Error details:', {
+              message: insertError.message,
+              details: insertError.details,
+              hint: insertError.hint,
+              code: insertError.code
+            });
+            return res.status(500).json({ 
+              error: 'Failed to add favorite',
+              details: insertError.message,
+              code: insertError.code
+            });
           }
           
           return res.status(200).json({ isFavorite: true });
