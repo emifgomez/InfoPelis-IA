@@ -15,12 +15,24 @@ Una plataforma interactiva para amantes del cine donde puedes gestionar tus favo
 - [React Router Dom](https://reactrouter.com/)
 - [CSS3](https://developer.mozilla.org/es/docs/Web/CSS) (Diseño responsivo y Dark Mode)
 
+- Implementé un backend Serverless mediante Vercel Functions, permitiendo una comunicación segura con la API de Mistral AI y protegiendo las credenciales del lado del servidor.
+
 ## 🔧 Instalación
 1. Clona el repositorio: `git clone https://github.com/TU_USUARIO/TU_REPO.git`
 2. Instala las dependencias: `npm install`
 3. Crea un archivo `.env` con tus credenciales:
    ```env
-   VITE_TMDB_KEY=tu_llave
-   VITE_MISTRAL_KEY=tu_llave
-   VITE_SUPABASE_URL=tu_url
-   VITE_SUPABASE_ANON_KEY=tu_llave
+   TMDB_API_KEY=tu_llave
+   MISTRAL_API_KEY=tu_llave
+   SUPABASE_URL=tu_url
+   SUPABASE_SERVICE_ROLE_KEY=tu_llave
+
+Retos Técnicos y Soluciones
+
+Gestión de Estado Asincrónico: Implementación de flujos de datos complejos integrando Mistral AI y TMDB, asegurando una experiencia de usuario fluida mediante estados de carga y manejo de errores.
+
+Persistencia y Seguridad: Configuración de Supabase Auth y manejo de bases de datos relacionales para la gestión de perfiles de usuario, reseñas y listas de favoritos.
+
+Optimización de Consultas: Consumo eficiente de APIs REST con filtrado dinámico de datos y renderizado condicional de componentes.
+
+UI/UX Modular: Arquitectura basada en componentes reutilizables con CSS Modules/Custom Properties para soportar modo oscuro y diseño adaptable.
