@@ -32,6 +32,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
+    // Verify authentication
+    const authHeader = req.headers.authorization;
+    let currentUser: any = null;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      if (error || !user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+      currentUser = user;
+    } else {
+      return res.status(401).json({ error: 'Authorization header required' });
+    }
+
+    // Verify that the userId in the request matches the authenticated user
+    if (userId !== currentUser.id) {
+      return res.status(403).json({ error: 'Forbidden: User ID mismatch' });
+    }
+
     switch (action) {
       case 'check':
         if (!movieId || !userId) {

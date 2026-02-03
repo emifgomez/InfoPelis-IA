@@ -32,8 +32,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     switch (action) {
       case 'getUser':
-        const { data: { user } } = await supabase.auth.getUser();
-        return res.status(200).json({ user });
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          const token = authHeader.substring(7);
+          const { data: { user }, error } = await supabase.auth.getUser(token);
+          if (error) {
+            console.error('Error getting user:', error);
+            return res.status(200).json({ user: null });
+          }
+          return res.status(200).json({ user });
+        } else {
+          const { data: { session }, error } = await supabase.auth.getSession();
+          if (error || !session) {
+            return res.status(200).json({ user: null });
+          }
+          return res.status(200).json({ user: session.user });
+        }
 
       case 'signIn':
         if (!email || !password) {
@@ -46,7 +60,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (signInError) {
           return res.status(400).json({ error: signInError.message });
         }
-        return res.status(200).json({ user: signInData.user, session: signInData.session });
+        return res.status(200).json({ 
+          user: signInData.user, 
+          session: signInData.session,
+          token: signInData.session?.access_token 
+        });
 
       case 'signUp':
         if (!email || !password) {
@@ -59,7 +77,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (signUpError) {
           return res.status(400).json({ error: signUpError.message });
         }
-        return res.status(200).json({ user: signUpData.user, session: signUpData.session });
+        return res.status(200).json({ 
+          user: signUpData.user, 
+          session: signUpData.session,
+          token: signUpData.session?.access_token 
+        });
 
       case 'signOut':
         await supabase.auth.signOut();

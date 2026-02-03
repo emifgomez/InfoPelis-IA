@@ -7,6 +7,7 @@ import NavBar from "./components/NavBar";
 import MyList from "./MyList";
 import Sidebar from "./components/Sidebar";
 import ActorDetail from "./ActorDetail";
+import { AuthProvider } from "./contexts/AuthContext";
 
 const GenreContext = createContext();
 
@@ -30,30 +31,32 @@ function App() {
   };
 
   return (
-    <GenreContext.Provider value={{ selectedGenre, setSelectedGenre, genreQuery, setGenreQuery, handleGenreSelect }}>
-      <div className="app-container">
-        <BrowserRouter>
-          <Sidebar 
-            onSelectGenre={handleGenreSelect} 
-            isMobileSidebarOpen={isMobileSidebarOpen}
-            setIsMobileSidebarOpen={setIsMobileSidebarOpen}
-          />
-          <NavBar 
-            isMobileSidebarOpen={isMobileSidebarOpen}
-            setIsMobileSidebarOpen={setIsMobileSidebarOpen}
-          />
-          <div className="main-content">
-            <Routes>
-              <Route path="/mi-lista" element={<MyList />} />
-              <Route path="/" element={<Index />} />
-              <Route path="/show/:type/:id" element={<Show />} />
-              <Route path="/:type/:id" element={<Show />} />
-              <Route path="/actor/:id" element={<ActorDetail />} />
-            </Routes>
-          </div>
-        </BrowserRouter>
-      </div>
-    </GenreContext.Provider>
+    <AuthProvider>
+      <GenreContext.Provider value={{ selectedGenre, setSelectedGenre, genreQuery, setGenreQuery, handleGenreSelect }}>
+        <div className="app-container">
+          <BrowserRouter>
+            <Sidebar 
+              onSelectGenre={handleGenreSelect} 
+              isMobileSidebarOpen={isMobileSidebarOpen}
+              setIsMobileSidebarOpen={setIsMobileSidebarOpen}
+            />
+            <NavBar 
+              isMobileSidebarOpen={isMobileSidebarOpen}
+              setIsMobileSidebarOpen={setIsMobileSidebarOpen}
+            />
+            <div className="main-content">
+              <Routes>
+                <Route path="/mi-lista" element={<MyList />} />
+                <Route path="/" element={<Index />} />
+                <Route path="/show/:type/:id" element={<Show />} />
+                <Route path="/:type/:id" element={<Show />} />
+                <Route path="/actor/:id" element={<ActorDetail />} />
+              </Routes>
+            </div>
+          </BrowserRouter>
+        </div>
+      </GenreContext.Provider>
+    </AuthProvider>
   );
 }
 

@@ -1,36 +1,38 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "./contexts/AuthContext";
 
 export default function MyList() {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { user, token } = useAuth();
 
   useEffect(() => {
     fetchFavorites();
-  }, []);
+  }, [user]);
 
 const fetchFavorites = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    
     try {
-      const authResponse = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getUser' }),
-      });
-      const authData = await authResponse.json();
-      const user = authData.user;
-      
-      if (user) {
-        const favResponse = await fetch('/api/favorites', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'list',
-            userId: user.id,
-          }),
-        });
-        const favData = await favResponse.json();
-        setFavorites(favData.favorites || []);
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
+      
+      const favResponse = await fetch('/api/favorites', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          action: 'list',
+          userId: user.id,
+        }),
+      });
+      const favData = await favResponse.json();
+      setFavorites(favData.favorites || []);
     } catch (error) {
       console.error("Error:", error);
     } finally {

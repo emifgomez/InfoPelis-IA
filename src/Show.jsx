@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import ChatIA from "./ChatIA";
 import Reviews from "./Reviews";
+import { useAuth } from "./contexts/AuthContext";
 import "./Show.css";
 
 export default function Show() {
@@ -12,28 +13,18 @@ export default function Show() {
 
   const [isFavorite, setIsFavorite] = useState(false);
   const [loadingFav, setLoadingFav] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user, token } = useAuth();
 
   
 
 useEffect(() => {
     const fetchMovieData = async () => {
       try {
-        const [authResponse, movieResponse] = await Promise.all([
-          fetch('/api/auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'getUser' }),
-          }),
-          fetch('/api/movie', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type, id }),
-          }),
-        ]);
-
-        const authData = await authResponse.json();
-        setCurrentUser(authData.user);
+        const movieResponse = await fetch('/api/movie', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, id }),
+        });
 
         const movieData = await movieResponse.json();
         const res = movieData.data;
@@ -53,20 +44,17 @@ useEffect(() => {
   }, [id, type]);
 
 const checkIfFavorite = async (movieId) => {
+    if (!user) return;
+    
     try {
-      const authResponse = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getUser' }),
-      });
-      const authData = await authResponse.json();
-      const user = authData.user;
-      
-      if (!user) return;
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
       
       const favResponse = await fetch('/api/favorites', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           action: 'check',
           movieId: movieId.toString(),
@@ -82,25 +70,21 @@ const checkIfFavorite = async (movieId) => {
   };
 
 const toggleFavorite = async () => {
+    if (!user) {
+      alert("Debes estar logueado para guardar favoritos");
+      return;
+    }
+    
     setLoadingFav(true);
     try {
-      const authResponse = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getUser' }),
-      });
-      const authData = await authResponse.json();
-      const user = authData.user;
-      
-      if (!user) {
-        alert("Debes estar logueado para guardar favoritos");
-        setLoadingFav(false);
-        return;
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
       const favResponse = await fetch('/api/favorites', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           action: 'toggle',
           movieId: data.id.toString(),
@@ -207,7 +191,7 @@ const toggleFavorite = async () => {
         </div>
       </div>
 
-      <Reviews id={id} data={data} currentUser={currentUser} />
+      <Reviews id={id} data={data} currentUser={user} />
 
       <ChatIA data={data} cast={cast} />
     </div>

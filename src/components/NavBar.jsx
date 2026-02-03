@@ -1,38 +1,21 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Navbar({ toggleSidebars, isMobileSidebarOpen, setIsMobileSidebarOpen }) {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user, token, login, signup, logout } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [scrolled, setScrolled] = useState(false);
 
   const handleLogoClick = () => {
-    setSelectedGenre("");
-    setType("movie");
-    setPage(1);
+    navigate("/");
   };
 
 useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
-
-    const checkUser = async () => {
-      try {
-        const response = await fetch('/api/auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'getUser' }),
-        });
-        const data = await response.json();
-        setUser(data.user);
-      } catch (error) {
-        console.error("Error checking user:", error);
-      }
-    };
-
-    checkUser();
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
@@ -42,29 +25,18 @@ useEffect(() => {
 const handleAuth = async (type) => {
     if (!email || !password) return alert("Completa los campos");
     
-    try {
-      const response = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: type === "login" ? "signIn" : "signUp",
-          email,
-          password,
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (data.error) {
-        alert(data.error);
-      } else {
-        setUser(data.user);
-        setEmail("");
-        setPassword("");
-      }
-    } catch (error) {
-      console.error("Auth error:", error);
-      alert("Error de conexión");
+    let result;
+    if (type === "login") {
+      result = await login(email, password);
+    } else {
+      result = await signup(email, password);
+    }
+    
+    if (result.error) {
+      alert(result.error);
+    } else {
+      setEmail("");
+      setPassword("");
     }
   };
 
@@ -110,18 +82,7 @@ const handleAuth = async (type) => {
                 {user.is_anonymous ? "👤 Invitado" : user.email.split("@")[0]}
               </span>
 <button
-                onClick={async () => {
-                  try {
-                    await fetch('/api/auth', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ action: 'signOut' }),
-                    });
-                    setUser(null);
-                  } catch (error) {
-                    console.error("Sign out error:", error);
-                  }
-                }}
+                onClick={logout}
                 style={logoutBtnStyle}
               >
                 Salir
