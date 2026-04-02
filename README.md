@@ -25,7 +25,7 @@ Una plataforma interactiva para amantes del cine donde puedes gestionar tus favo
    TMDB_API_KEY=tu_llave
    MISTRAL_API_KEY=tu_llave
    SUPABASE_URL=tu_url
-   SUPABASE_SERVICE_ROLE_KEY=tu_llave
+   SUPABASE_ANON_KEY=tu_llave
 
 Retos Técnicos y Soluciones
 
